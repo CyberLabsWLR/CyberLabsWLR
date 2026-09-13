@@ -1,16 +1,14 @@
-## Hi there 👋
+# Cyber Security Labs
 
-<!--
-**CyberLabsWLR/CyberLabsWLR** is a ✨ _special_ ✨ repository because its `README.md` (this file) appears on your GitHub profile.
+Ich interessiere mich sehr für Cyber Security und insbesondere für den Aufbau und die Absicherung moderner IT-Umgebungen.
 
-Here are some ideas to get you started:
+Mein Ziel ist es, praktische Kenntnisse in verschiedenen Bereichen der Cyber Security aufzubauen. Dabei erstelle ich eigene Laborumgebungen, teste verschiedene Technologien und beschäftige mich damit, wie Sicherheitsmechanismen in der Praxis funktionieren.
 
-- 🔭 I’m currently working on ...
-- 🌱 I’m currently learning ...
-- 👯 I’m looking to collaborate on ...
-- 🤔 I’m looking for help with ...
-- 💬 Ask me about ...
-- 📫 How to reach me: ...
-- 😄 Pronouns: ...
-- ⚡ Fun fact: ...
--->
+Ich bilde mich gerne weiter und nutze praktische Projekte, um neue Technologien, Konzepte und Sicherheitsansätze kennenzulernen.
+
+Dieses Repository dient dazu, meine Projekte zu dokumentieren.
+
+## Labs
+
+### SIEM Lab mit Wazuh
+[Wazuh SIEM Lab ansehen](./SIEM-Wazuh/README.md)
