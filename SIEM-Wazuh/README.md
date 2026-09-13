@@ -8,7 +8,7 @@ Die gesamte Laborumgebung läuft auf meinem MacBook Pro (M3). Darauf ist Docker 
 Die nachfolgende Grafik zeigt den Aufbau der Laborumgebung auf:
 
 <p align="center">
-  <img src="SIEM-Wazuh/images/Aufbau_Laborumgebung_Bild1.png" width="75%">
+  <img src="SIEM-Wazuh/images/Aufbau_Laborumgebung_Bild1.png" width="60%">
   <br>
   <em>Aufbau Laborumgebung</em>
 </p>
