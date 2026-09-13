@@ -11,4 +11,4 @@ Dieses Repository dient dazu, meine Projekte zu dokumentieren.
 ## Labs
 
 ### SIEM (Security Information and Event Management)
-[SIEM Lab mit Wazuh](./SIEM-Wazuh/README.md)
+[SIEM Lab mit Wazuh](./SIEM-Wazuh)
