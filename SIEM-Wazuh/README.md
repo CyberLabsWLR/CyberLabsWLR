@@ -19,6 +19,15 @@
 - [Threat Intelligence](#threat-intelligence)
   - [Einbindung von VirusTotal](#einbindung-von-virustotal)
   - [VirusTotal Testing](#virustotal-testing)
+- [Test-Szenario](#test-szenario)
+  - [Der Angriff](#der-angriff)
+  - [Incident Response](#incident-response)
+    - [Detection](#detection)
+    - [Analysis](#analysis)
+    - [Containment](#containment)
+    - [Eradication](#eradication)
+    - [Recovery](#recovery)
+    - [Lessons Learned](#lessons-learned)
 
 
 # SIEM Lab Wazuh
@@ -211,3 +220,64 @@ Die Datei wurde durch File Integrity Monitoring erkannt und ihr Hash automatisie
 </p>
 
 Der Test zeigt, wie Wazuh lokale Ereignisse mit externen Threat-Intelligence-Daten anreichern kann. Während eine normale FIM-Regel lediglich erkennt, dass eine Datei erstellt oder verändert wurde, liefert VirusTotal zusätzlichen Kontext zur Reputation des Datei-Hashes. Dadurch können verdächtige Dateien schneller verwertet und priorisiert werden. 
+
+## Test Szenario
+Für das folgende Testszenario kommt die bewusst verwundbare Webanwendung DVWA (Damn Vulnerable Web Application) zum Einsatz. DVWA wurde speziell für Schulungs- und Testzwecke entwickelt und enthält verschiedene bekannte Schwachstellen im Web-Bereich. Dadurch eignet sich die Anwendung gut, um Angriffe in einer kontrollierten Laborumgebung zu simulieren.
+In diesem Szenario wird eine SQL-Injection gegen DVWA durchgeführt. Das Ziel besteht darin, den Angriff gezielt auszulösen und anschliessend zu untersuchen, welche Spuren dabei in den Webserver-Logs entstehen und wie diese Ereignisse in Wazuh sichtbar werden. Anschliessend wird anhand der erkannten Ereignisse beispielhaft aufgezeigt, wie ein Vorfall nach einem strukturierten Incident-Response-Prozess analysiert und behandelt werden kann. Zusätzlich wird der Angriff mit MITRE ATT&CK eingeordnet.
+
+### Der Angriff
+Für die Angriffssimulation wurde die SQL-Injection-Funktion von DVWA genutzt. Als Payload wurde „1' OR '1'='1” eingegeben. Da die Bedingung „'1'='1” immer wahr ist, lieferte die Anwendung mehrere Datensätze aus der Benutzertabelle zurück. Somit konnte die SQL-Injection erfolgreich demonstriert werden. Parallel dazu wurde das Apache-Access-Log überwacht. Der Angriff erzeugte einen HTTP-GET-Request, in dem die Payload URL-codiert gespeichert wurde. Dabei erscheint der String ' als %27, wodurch sich der Angriff auch auf Log-Ebene nachvollziehen lässt.
+
+<p align="center">
+  <img src="SIEM-Wazuh/images/SQLi_Angriff_DVWA_Bild19.png" width="60%">
+  <br>
+  <em>SQLi Angriff auf DVWA</em>
+</p>
+
+<p align="center">
+  <img src="SIEM-Wazuh/images/Apache_Log_Bild20.png" width="60%">
+  <br>
+  <em>Apache Log</em>
+</p>
+
+### Incident Response 
+Zur Bearbeitung des simulierten Vorfalls wird ein vereinfachter Incident-Response-Prozess verwendet. Dieser umfasst die folgenden Phasen: Detection, Analysis, Containment, Eradication, Recovery und Lessons Learned.
+
+#### Detection
+Eine Zuvor defnierte Detection Rule erkannte das typische SQL-Injection Muster innerhalb der URL, wodurch ein Alert mit dem Schweregrad 10 erzeugt wurde. Dieser Alert wird mit der Rule ID «100700» und der Beschreibung «DVWA SQL Injection Attempt Detected» im Wazuh Dashboard dargestellt. 
+
+<p align="center">
+  <img src="SIEM-Wazuh/images/SQLi_Detected_Bild21.png" width="60%">
+  <br>
+  <em>SQLi Detected</em>
+</p>
+
+#### Analysis
+Im nächsten Schritt wurde der Alert genauer analysiert. Der HTTP-Request richtete sich gegen den DVWA-Endpoint /dvwa/vulnerabilities/sqli/ und enthielt die URL-codierte SQL-Injection-Payload „1' OR '1'='1”. Der Webserver antwortete mit dem HTTP-Statuscode 200 und bestätigte somit die erfolgreiche Verarbeitung der Anfrage. Als Quell-IP wird 127.0.0.1 angezeigt, da der Angriff innerhalb der Laborumgebung direkt vom gleichen Kali-System gegen die lokal gehostete DVWA-Instanz ausgeführt wurde. In einer realen Umgebung würde an dieser Stelle typischerweise die IP-Adresse des angreifenden Systems untersucht werden.
+Zur standardisierten Einordnung kann der Vorfall dem MITRE ATT&CK zugeordnet werden. Die Ausnutzung einer Schwachstelle in einer Webanwendung lässt sich der Technik T1190 „Exploit Public-Facing Application” zuordnen. In diesem Szenario wird eine Schwachstelle der Webanwendung durch eine manipulierte Eingabe ausgenutzt, um die vorgesehene Verarbeitung der Anwendung zu umgehen.
+
+#### Containment
+Nach der Bestätigung des Vorfalls müssen zunächst Massnahmen getroffen werden, um eine weitere Ausnutzung zu verhindern. Dazu könnte der Zugriff der erkannten Quell-IP auf den Webserver temporär blockiert werden. Zusätzlich könnte der Zugriff auf die betroffene Webanwendung eingeschränkt oder der betroffene Dienst vorübergehend isoliert werden. Das Ziel dieser Phase besteht darin, die Auswirkungen des Angriffs zu begrenzen, ohne dabei mögliche Beweise und relevante Logdaten zu verlieren.
+
+#### Eradication
+Nach der Eindämmung muss die Ursache des Vorfalls behoben werden. Im Falle einer SQL-Injection betrifft dies insbesondere die unsichere Verarbeitung von Benutzereingaben innerhalb der Webanwendung. Geeignete Massnahmen wären die Verwendung parametrisierter Datenbankabfragen bzw. Prepared Statements und eine konsequente Eingabevalidierung. Zusätzlich sollten ähnliche Eingabefelder der Anwendung auf vergleichbare Schwachstellen überprüft werden.
+
+#### Recovery
+Nach der Behebung der Schwachstelle kann die Anwendung wieder freigegeben werden. Anschliessend sollte überprüft werden, ob die Anwendung ordnungsgemäss funktioniert und eine SQL-Injection nicht mehr erfolgreich durchgeführt werden kann. Gleichzeitig bleibt das Monitoring in Wazuh aktiv, um weitere verdächtige Requests oder erneute Angriffsversuche zu erkennen.
+
+#### Lessons Learned
+Der simulierte Vorfall zeigt, dass die reine Sammlung von Webserver-Logs noch keine ausreichende Erkennung darstellt. Erst durch die Analyse des Angriffsmusters und die entsprechende Wazuh-Regel konnte der SQL-Injection-Versuch als sicherheitsrelevanter Alert gezielt erkannt werden. Zur Verbesserung könnten weitere SQL-Injection-Muster berücksichtigt, die Detection Rule erweitert und eine automatische Reaktion für hoch priorisierte Alerts geprüft werden. Zusätzlich können MITRE-ATT&CK-Zuordnungen verwendet werden, um erkannte Angriffe einheitlicher zu klassifizieren.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
